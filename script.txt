@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DOTFILES_URL="https://github.com/Azuuuuure222/rice/raw/refs/heads/main/dot.tar.xz"
+OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.12.7/obsidian_1.12.7_amd64.deb"
+
+log() { echo -e "\e[34m[*] $1\e[0m"; }
+
+if [[ "$EUID" -eq 0 ]]; then
+    echo "Please run this script as a normal user with sudo privileges."
+    exit 1
+fi
+
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+log "Bootstrapping package lists..."
+sudo apt update
+sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates
+
+log "Adding Brave Origin repository..."
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+
+log "Installing core packages..."
+sudo apt update
+sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends sway foot fuzzel waybar brightnessctl grim slurp wl-clipboard network-manager pipewire-audio wireplumber tlp dbus-user-session brave-origin vim
+log "Configuring system permissions and services..."
+for group in video input render; do
+    getent group "$group" >/dev/null && sudo usermod -aG "$group" "$USER"
+done
+
+sudo systemctl enable --now tlp NetworkManager
+systemctl --user enable --now pipewire pipewire-pulse wireplumber || true
+
+mkdir -p "$HOME/.config"
+download() {
+    curl -fsSL --connect-timeout 10 --retry 3 --progress-bar -o "$2" "$1"
+}
+
+log "Downloading and extracting dotfiles..."
+if download "$DOTFILES_URL" "$TEMP_DIR/dot.tar.xz"; then
+    tar -xJf "$TEMP_DIR/dot.tar.xz" -C "$HOME/.config"
+fi
+
+log "Installing Obsidian package..."
+if download "$OBSIDIAN_URL" "$TEMP_DIR/obsidian.deb"; then
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y "$TEMP_DIR/obsidian.deb"
+fi
+
+log "Cleaning package manager caches..."
+sudo apt autoremove -y
+sudo apt clean
+
+log "Setup complete. Please configure your .profile to complete the auto-login configuration. brave-orgin+remove .desktop bloat, systemd grub quiet boot time"
