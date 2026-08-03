@@ -1,0 +1,161 @@
+/* dwl config.h converted from Sway configuration */
+#include <X11/keysym.h>
+#include <xkbcommon/xkbcommon.h>
+
+/* Helper macro for hex colors (RGBA) */
+#define COLOR(hex) { ((hex >> 24) & 0xFF) / 255.0f, \
+                     ((hex >> 16) & 0xFF) / 255.0f, \
+                     ((hex >> 8) & 0xFF) / 255.0f, \
+                     (hex & 0xFF) / 255.0f }
+
+/* Appearance */
+static const int sloppyfocus               = 1;  /* Focus follows mouse */
+static const int bypass_surface_visibility = 0;  
+static const unsigned int borderpx         = 1;  /* Border pixel size (default_border 1) */
+
+/* Color Schemes (Converted from client.*) */
+static const float focuscolor[]  = COLOR(0x333333ff); /* client.focused border */
+static const float bordercolor[] = COLOR(0x000000ff); /* client.unfocused border */
+static const float urgentcolor[] = COLOR(0xcc5555ff); /* client.urgent border */
+
+/* Note: 'smart_borders' is not present in stock dwl. 
+   You will need the 'smartborders' patch if you want borders disabled when 1 window is open. */
+
+static const float fullscreen_bg[] = {0.1f, 0.1f, 0.1f, 1.0f};
+
+/* Tagging (Workspaces) */
+#define TAGCOUNT (9)
+
+/* Logging */
+static int log_level = WLR_ERROR;
+
+/* Window rules */
+static const Rule rules[] = {
+	/* app_id     title       tags mask     isfloating   monitor */
+	{ "foot",     NULL,       0,            0,           -1 },
+};
+
+/* Layouts */
+static const Layout layouts[] = {
+	/* symbol     arrange function */
+	{ "[]=",      tile },
+	{ "><>",      NULL },    /* floating behavior */
+	{ "[M]",      monocle },
+};
+
+/* Monitors */
+static const MonitorRule monrules[] = {
+	/* name       mfact  nmaster scale layout       rotate/reflect                x  y */
+	{ NULL,       0.55f, 1,      1,    &layouts[0], WL_OUTPUT_TRANSFORM_NORMAL, -1, -1 },
+};
+
+/* Input / Keyboard */
+static const struct xkb_rule_names xkb_rules = {
+	.options = NULL,
+};
+
+static const int repeat_rate = 25;
+static const int repeat_delay = 600;
+
+/* Touchpad Configuration (Converted from input type:touchpad) */
+static const int tap_to_click = 1;         /* tap enabled */
+static const int tap_and_drag = 1;
+static const int drag_lock = 1;
+static const int natural_scrolling = 1;    /* natural_scroll enabled */
+static const int disable_while_typing = 1; /* dwt enabled */
+static const int left_handed = 0;
+static const int middle_button_emulation = 0;
+static const uint32_t send_events_mode = LIBINPUT_CONFIG_SEND_EVENTS_ENABLED;
+static const enum libinput_config_accel_profile accel_profile = LIBINPUT_CONFIG_ACCEL_PROFILE_DEFAULT;
+static const double accel_speed = 0.0;
+static const enum libinput_config_tap_button_map button_map = LIBINPUT_CONFIG_TAP_MAP_LRG;
+
+/* Modifier keys */
+#define MODKEY WLR_MODIFIER_LOGO /* Mod4 / Super Key */
+
+#define TAGKEYS(KEY,SKEY,TAG) \
+	{ MODKEY,                    KEY,  view,       {.ui = 1 << TAG} }, \
+	{ MODKEY|WLR_MODIFIER_CTRL,  KEY,  toggleview, {.ui = 1 << TAG} }, \
+	{ MODKEY|WLR_MODIFIER_SHIFT, SKEY, tag,        {.ui = 1 << TAG} }, \
+	{ MODKEY|WLR_MODIFIER_CTRL|WLR_MODIFIER_SHIFT, SKEY, toggletag, {.ui = 1 << TAG} }
+
+/* Command definitions */
+static const char *footcmd[]       = { "foot", NULL };
+static const char *fuzzelcmd[]     = { "fuzzel", NULL };
+static const char *bravecmd[]      = { "brave-origin", NULL };
+static const char *poweroffcmd[]   = { "systemctl", "poweroff", NULL };
+
+static const char *voldwncmd[]     = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%", NULL };
+static const char *volupcmd[]      = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%", NULL };
+static const char *volmutecmd[]    = { "pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle", NULL };
+
+static const char *brightdowncmd[] = { "brightnessctl", "set", "4%-", NULL };
+static const char *brightupcmd[]   = { "brightnessctl", "set", "+4%", NULL };
+
+static const char *wlsunsetoncmd[]  = { "wlsunset", "-T", "4001", NULL };
+static const char *wlsunsetoffcmd[] = { "pkill", "wlsunset", NULL };
+
+static const char *grimcmd[]       = { "grim", NULL };
+
+static const Key keys[] = {
+	/* Modifier                  Key                 Function        Argument */
+	{ MODKEY,                    XKB_KEY_t,          spawn,          {.v = footcmd} },
+	{ MODKEY,                    XKB_KEY_d,          spawn,          {.v = fuzzelcmd} },
+	{ MODKEY,                    XKB_KEY_b,          spawn,          {.v = bravecmd} },
+	{ MODKEY,                    XKB_KEY_q,          killclient,     {0} },
+	
+	/* dwl doesn't hot-reload via C config; Mod4+Shift+C quits dwl */
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_C,          quit,           {0} }, 
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_S,          spawn,          {.v = poweroffcmd} },
+
+	/* Focus switching 
+	   (Stock dwl uses focusstack -1/+1; for true directional focus apply the 'focusdir' patch) */
+	{ MODKEY,                    XKB_KEY_Left,       focusstack,     {.i = -1} },
+	{ MODKEY,                    XKB_KEY_Down,       focusstack,     {.i = +1} },
+	{ MODKEY,                    XKB_KEY_Up,         focusstack,     {.i = -1} },
+	{ MODKEY,                    XKB_KEY_Right,      focusstack,     {.i = +1} },
+
+	/* Moving windows 
+	   (Stock dwl uses 'zoom' to move active window to Master; apply 'movestack' patch for direction swapping) */
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Left,       zoom,           {0} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Down,       zoom,           {0} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Up,         zoom,           {0} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Right,      zoom,           {0} },
+
+	/* Layout & Window Control */
+	{ MODKEY,                    XKB_KEY_f,          togglefullscreen,{0} },
+	{ MODKEY,                    XKB_KEY_space,      togglefloating, {0} },
+
+	/* Resizing 
+	   (dwl doesn't have modal keymaps like Sway. In tiled layout, setmfact resizes the master area factor.
+	    For floating windows, hold Super + Right-click drag) */
+	{ MODKEY,                    XKB_KEY_r,          setmfact,       {.f = +0.05f} },
+
+	/* Media / Volume Controls */
+	{ 0, XKB_KEY_XF86AudioMute,        spawn, {.v = volmutecmd} },
+	{ 0, XKB_KEY_XF86AudioLowerVolume, spawn, {.v = voldwncmd} },
+	{ 0, XKB_KEY_XF86AudioRaiseVolume, spawn, {.v = volupcmd} },
+
+	/* Brightness Controls */
+	{ 0, XKB_KEY_XF86MonBrightnessDown, spawn, {.v = brightdowncmd} },
+	{ 0, XKB_KEY_XF86MonBrightnessUp,   spawn, {.v = brightupcmd} },
+
+	/* Custom Keybinds */
+	{ WLR_MODIFIER_ALT,          XKB_KEY_a,          spawn,          {.v = wlsunsetoncmd} },
+	{ WLR_MODIFIER_ALT,          XKB_KEY_s,          spawn,          {.v = wlsunsetoffcmd} },
+	{ 0,                         XKB_KEY_Print,      spawn,          {.v = grimcmd} },
+
+	/* Workspace bindings 1–5 (Mod4+1 to switch workspace, Mod4+Shift+1 to move window) */
+	TAGKEYS(          XKB_KEY_1, XKB_KEY_exclam,     0),
+	TAGKEYS(          XKB_KEY_2, XKB_KEY_at,         1),
+	TAGKEYS(          XKB_KEY_3, XKB_KEY_numbersign, 2),
+	TAGKEYS(          XKB_KEY_4, XKB_KEY_dollar,     3),
+	TAGKEYS(          XKB_KEY_5, XKB_KEY_percent,    4),
+};
+
+/* Mouse bindings (floating_modifier Mod4 normal) */
+static const Button buttons[] = {
+	{ MODKEY, BTN_LEFT,   moveresize,     {.ui = CurMove} },
+	{ MODKEY, BTN_MIDDLE, togglefloating, {0} },
+	{ MODKEY, BTN_RIGHT,  moveresize,     {.ui = CurResize} },
+};
