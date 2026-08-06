@@ -1,0 +1,5 @@
+- obsidian - study notes
+- typing practice -- curl -fsSL https://raw.githubusercontent.com/vyrx-dev/toofan/master/install.sh | sh
+- sioyek - read books (the silent patient)
+	- make a read-ed books list
+- learn programming
